@@ -132,6 +132,7 @@ class AgentLoop:
 
     async def _connect_mcp(self) -> None:
         """Connect to configured MCP servers (one-time, lazy)."""
+        logger.info("start to connect mcp server: {}", self._mcp_servers)
         if self._mcp_connected or self._mcp_connecting or not self._mcp_servers:
             return
         self._mcp_connecting = True
@@ -187,10 +188,10 @@ class AgentLoop:
         iteration = 0
         final_content = None
         tools_used: list[str] = []
-
+        
         while iteration < self.max_iterations:
             iteration += 1
-
+            logger.debug("Iteration {iteration}. Get message \n{messages}")
             response = await self.provider.chat(
                 messages=messages,
                 tools=self.tools.get_definitions(),
@@ -199,7 +200,7 @@ class AgentLoop:
                 max_tokens=self.max_tokens,
                 reasoning_effort=self.reasoning_effort,
             )
-
+            logger.debug("Response \n{response}")
             if response.has_tool_calls:
                 if on_progress:
                     clean = self._strip_think(response.content)
@@ -335,6 +336,7 @@ class AgentLoop:
     ) -> OutboundMessage | None:
         """Process a single inbound message and return the response."""
         # System messages: parse origin from chat_id ("channel:chat_id")
+        logger.debug("loop received message from channel {}: {}", msg.channel, msg.content)
         if msg.channel == "system":
             channel, chat_id = (msg.chat_id.split(":", 1) if ":" in msg.chat_id
                                 else ("cli", msg.chat_id))

@@ -111,6 +111,7 @@ class BaseChannel(ABC):
             session_key_override=session_key,
         )
 
+        logger.debug("Received message from channel {}: {}", self.name, msg)
         await self.bus.publish_inbound(msg)
 
     @property
